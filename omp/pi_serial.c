@@ -1,6 +1,6 @@
 #include<stdio.h>
 
-#define steps 100000000
+#define steps 1000000000
 
 void main(){
 	double x, pi, sum = 0;
