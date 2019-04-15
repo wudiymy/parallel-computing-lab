@@ -14,7 +14,7 @@ void main(){
         double sum_part = 0;
         int id = omp_get_thread_num();
 	    for(i = id; i < STEPS; i+=NUM_THREADS){
-	    	x = (i - 0.5) * step;
+	    	x = (i + 0.5) * step;
 	    	sum_part += 4.0/(1.0 + x * x);
 	    }
         sum[id] = sum_part;
