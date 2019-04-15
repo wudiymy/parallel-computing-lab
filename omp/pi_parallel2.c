@@ -14,11 +14,13 @@ void main(){
         double x;
         int id = omp_get_thread_num();
         sum[id] = 0;
+        double sump = 0;
         #pragma omp for 
         for(i=0; i < STEPS; i++){
             x = (i + 0.5) * step;
-            sum[id] += 4.0 / (1.0 + x*x);
+            sump += 4.0 / (1.0 + x*x);
         }
+        sum[id] = sump;
     }
 
     for(i = 0, pi = 0; i < NUM_THREADS; i++)
