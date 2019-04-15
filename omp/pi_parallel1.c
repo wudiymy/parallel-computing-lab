@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<omp.h>
 #define STEPS 1000000000
-#define NUM_THREADS 8
+#define NUM_THREADS 4
 
 void main(){
     int i;
