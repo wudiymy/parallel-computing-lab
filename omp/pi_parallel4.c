@@ -9,7 +9,7 @@ void main()
     double step = 1.0 / (double) STEPS;
     omp_set_num_threads(NUM_THREADS);
 
-    #pragma omp parallel for reduction(+:sum) private(x)
+    #pragma omp parallel for reduction(+:sum) private(x) schedule(guided,7500)
     for(int i=0; i < STEPS; i++) 
     {
         x = (i + 0.5) * step;

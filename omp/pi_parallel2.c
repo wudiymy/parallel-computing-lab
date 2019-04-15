@@ -15,7 +15,7 @@ void main(){
         int id = omp_get_thread_num();
         sum[id] = 0;
         double sump = 0;
-        #pragma omp for 
+        #pragma omp for schedule(guided,7500)
         for(i=0; i < STEPS; i++){
             x = (i + 0.5) * step;
             sump += 4.0 / (1.0 + x*x);
