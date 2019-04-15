@@ -22,7 +22,6 @@ void main(){
 	
     pi = 0;
     for(i = 0; i < NUM_THREADS; i++)
-        pi += sum[i];
-    pi *= step; 
+        pi += sum[i] * step;
 	printf("\npi=%0.20lf\n", pi);
 }
