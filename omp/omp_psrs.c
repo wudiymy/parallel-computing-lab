@@ -1,8 +1,9 @@
 #include<stdio.h>
 #include"omp.h"
 #include<stdlib.h>
-#define NUM_THREADS 8
-#define NUM_DATA 100000
+int NUM_THREADS=8;
+int NUM_DATA=100000000;
+int datas[100000000];
 
 int cmp(const void *a, const void *b)
 {
@@ -12,7 +13,7 @@ int cmp(const void *a, const void *b)
 void datas_init(int *datas)
 {
 	for (int i = 0; i < NUM_DATA; i++)
-		datas[i] = rand();
+		datas[i] = NUM_DATA - i;
 
 }
 
@@ -51,7 +52,7 @@ int main()
 
 	if (length == 0)
 		return 0;
-	int datas[NUM_DATA];
+
 	datas_init(datas);
 
 
@@ -77,6 +78,7 @@ int main()
 			regularSamples[NUM_THREADS * id + i] = thread_datas[(i * length) / NUM_THREADS];
 		}
 
+#pragma omp barrier
 #pragma omp single 
 		{
 			qsort(regularSamples, NUM_THREADS * NUM_THREADS, sizeof(int), cmp);
