@@ -1,9 +1,9 @@
 #include<stdio.h>
 #include"omp.h"
 #include<stdlib.h>
-int NUM_THREADS=8;
-int NUM_DATA=1000;
-int global_datas[1000];
+int NUM_THREADS=4;
+int NUM_DATA=102;
+int global_datas[102];
 
 int cmp(const void *a, const void *b)
 {
@@ -13,7 +13,7 @@ int cmp(const void *a, const void *b)
 void datas_init(int *datas)
 {
 	for (int i = 0; i < NUM_DATA; i++)
-		datas[i] = 100 * rand();
+		datas[i] = rand()%1000;
 
 }
 
@@ -48,7 +48,7 @@ void datas_sort(int *datas, int length)
 int main()
 {
 	//int datas[NUM_DATA] = {48,39,6,72,91,14,69,40,89,61,12,21,84,58,32,33,72,20};
-	int length = NUM_DATA / NUM_THREADS;
+	int length = (NUM_DATA + NUM_THREADS - 1) / NUM_THREADS;
 	int flag = NUM_DATA % NUM_THREADS;
 
 	
@@ -57,15 +57,20 @@ int main()
 
 	datas_init(global_datas);
 	
+	int *datas;
 	if(flag!=0)
 	{
-		int *datas = int * malloc(sizeof(int) * (length + flag));
-		for(int i = 0; i < length; i++)
+		datas = (int *) malloc(sizeof(int) * (length * NUM_THREADS));
+		for(int i = 0; i < NUM_DATA; i++)
 			datas[i] = global_datas[i];
-		for(int i = length; i < length + flag; i++)
-			datas[i] = 21474836473;
-		 
+		for(int i = NUM_DATA; i < length * NUM_THREADS; i++)
+			datas[i] = __INT32_MAX__;
 	}
+	else
+	{
+		datas =  global_datas;
+	}
+	
 
 
 	int regularSamples[NUM_THREADS * NUM_THREADS]; //样本数组
@@ -138,6 +143,7 @@ int main()
 		qsort(temp, size, sizeof(int), cmp);
 		
 #pragma omp barrier
+		
 #pragma omp for ordered schedule(static,1)
 		for (int t = 0; t < omp_get_num_threads(); ++t)
 		{
@@ -148,11 +154,13 @@ int main()
 			}
 		}
 	}
+
 	if(flag > 0)
 	{
-		for(int i = 0; i<  length; i++)
+		for(int i = 0; i<  NUM_DATA; i++)
 			global_datas[i] = datas[i];
 	}
+	
 	if (datas_check(global_datas))
 		printf("YOU ARE RIGHT\n");
 	else
