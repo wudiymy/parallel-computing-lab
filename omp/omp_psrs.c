@@ -2,8 +2,8 @@
 #include"omp.h"
 #include<stdlib.h>
 int NUM_THREADS=8;
-int NUM_DATA=100000000;
-int datas[100000000];
+int NUM_DATA=1000;
+int global_datas[1000];
 
 int cmp(const void *a, const void *b)
 {
@@ -49,12 +49,23 @@ int main()
 {
 	//int datas[NUM_DATA] = {48,39,6,72,91,14,69,40,89,61,12,21,84,58,32,33,72,20};
 	int length = NUM_DATA / NUM_THREADS;
+	int flag = NUM_DATA % NUM_THREADS;
 
+	
 	if (length == 0)
 		return 0;
 
-	datas_init(datas);
-
+	datas_init(global_datas);
+	
+	if(flag!=0)
+	{
+		int *datas = int * malloc(sizeof(int) * (length + flag));
+		for(int i = 0; i < length; i++)
+			datas[i] = global_datas[i];
+		for(int i = length; i < length + flag; i++)
+			datas[i] = 21474836473;
+		 
+	}
 
 
 	int regularSamples[NUM_THREADS * NUM_THREADS]; //样本数组
@@ -125,7 +136,8 @@ int main()
 		}
 
 		qsort(temp, size, sizeof(int), cmp);
-
+		
+#pragma omp barrier
 #pragma omp for ordered schedule(static,1)
 		for (int t = 0; t < omp_get_num_threads(); ++t)
 		{
@@ -136,8 +148,12 @@ int main()
 			}
 		}
 	}
-
-	if (datas_check(datas))
+	if(flag > 0)
+	{
+		for(int i = 0; i<  length; i++)
+			global_datas[i] = datas[i];
+	}
+	if (datas_check(global_datas))
 		printf("YOU ARE RIGHT\n");
 	else
 		printf("SOMETHINE WRONG\n");
