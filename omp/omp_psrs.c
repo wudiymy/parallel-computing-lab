@@ -13,7 +13,7 @@ int cmp(const void *a, const void *b)
 void datas_init(int *datas)
 {
 	for (int i = 0; i < NUM_DATA; i++)
-		datas[i] = NUM_DATA - i;
+		datas[i] = 100 * rand();
 
 }
 
