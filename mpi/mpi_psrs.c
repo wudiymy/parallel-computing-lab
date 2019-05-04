@@ -2,7 +2,8 @@
 #include<stdlib.h>
 #include<mpi.h>
 
-int DATA_NUM=10000;
+int DATA_NUM=1000000;
+int datas[1000000];
 
 void datas_init(int *datas)
 {
@@ -13,7 +14,7 @@ void datas_init(int *datas)
 int datas_check(const int *datas)
 {
     int i;
-    for(int i = 0; i < DATA_NUM - 1; i++)
+    for(i = 0; i < DATA_NUM - 1; i++)
     {
         if( datas[i] > datas[i+1] )
             break;
@@ -35,7 +36,8 @@ int main()
 {
     int mpi_size;
     int my_rank;
-    int datas[DATA_NUM];
+    //int datas[] = {48, 39, 6, 72, 91, 14, 69, 40, 89, 61, 12, 21, 84, 58, 32, 33, 72, 20 }; 
+
 
     MPI_Init(NULL, NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -51,6 +53,11 @@ int main()
     if(my_rank == 0)
     {
         datas_init(datas);
+        //for(int i = 0; i < DATA_NUM; i++)
+        //{
+        //    printf(" %d ",datas[i]);
+        //}
+
         for(int i = 0; i < mpi_size - 1; i++)
         {
             datas_begin[i] = i * length;
@@ -66,8 +73,14 @@ int main()
     MPI_Scatterv(datas, datas_len, datas_begin, MPI_INT, local_datas, 
                     local_datas_size, MPI_INT, 0, MPI_COMM_WORLD);
     
+    //for(int i = 0; i < local_datas_size; i++)
+    //{
+    //    printf("id %d: %d\n", my_rank, local_datas[i]);
+    //}
+
     //step2: local sort
     qsort(local_datas, local_datas_size, sizeof(int), cmp);
+    
     
     //step3: select samples
     int regular_samples[mpi_size];
@@ -75,6 +88,11 @@ int main()
         regular_samples[i] = local_datas[i * local_datas_size / mpi_size];
 
     MPI_Barrier(MPI_COMM_WORLD);
+
+    //for(int i = 0; i < mpi_size; i++)
+    //{
+    //    printf("id %d: %d\n", my_rank, regular_samples[i]);
+    //}
 
     int global_regular_samples[mpi_size * mpi_size];
 
@@ -89,6 +107,7 @@ int main()
         for(int i = 0; i < mpi_size - 1; i++)
         {
             privots[i] = global_regular_samples[(i+1) * mpi_size];
+            //printf("\n%d ",privots[i]);
         }
     }
 
@@ -136,6 +155,10 @@ int main()
 
     qsort(recv_part_data, rank_partlen_sum, sizeof(int), cmp);
 
+    //for(int i = 0; i < rank_partlen_sum; i++)
+    //{
+    //    printf("id %d: %d\n",my_rank, recv_part_data[i]);
+    //}
     MPI_Barrier(MPI_COMM_WORLD);
 
     //step8
@@ -164,6 +187,9 @@ int main()
             printf("\nyou are right\n");
         else
             printf("\nsomething wrong\n");
+        
+        //for(int i = 0; i < DATA_NUM; i++)
+        //    printf("%d\n",datas[i]);
     }
 
     MPI_Finalize();
