@@ -48,8 +48,8 @@ int main()
     int local_datas_size = min(length, DATA_NUM - length * my_rank);
     int *local_datas = (int *) malloc (sizeof(int) * local_datas_size);
 
-    int datas_begin[mpi_size];
-    int datas_len[mpi_size];
+    int *datas_begin = (int *) malloc(sizeof(int) * mpi_size);
+    int *datas_len = (int *) malloc (sizeof(int) * mpi_size);
     if(my_rank == 0)
     {
         datas_init(datas);
@@ -77,13 +77,14 @@ int main()
     //{
     //    printf("id %d: %d\n", my_rank, local_datas[i]);
     //}
-
+    free(datas_begin);
+    free(datas_len);
     //step2: local sort
     qsort(local_datas, local_datas_size, sizeof(int), cmp);
     
     
     //step3: select samples
-    int regular_samples[mpi_size];
+    int *regular_samples = (int *) malloc (sizeof(int) * mpi_size);
     for(int i = 0; i < mpi_size; i++)
         regular_samples[i] = local_datas[i * local_datas_size / mpi_size];
 
@@ -94,12 +95,12 @@ int main()
     //    printf("id %d: %d\n", my_rank, regular_samples[i]);
     //}
 
-    int global_regular_samples[mpi_size * mpi_size];
+    int *global_regular_samples = (int *) malloc (sizeof(int) * mpi_size * mpi_size);
 
     MPI_Gather(regular_samples, mpi_size, MPI_INT, global_regular_samples, 
                 mpi_size, MPI_INT, 0, MPI_COMM_WORLD);
 
-    int privots[mpi_size - 1];
+    int *privots = (int *) malloc (sizeof(int) * (mpi_size - 1));
 
     if(my_rank == 0)
     {
@@ -110,13 +111,15 @@ int main()
             //printf("\n%d ",privots[i]);
         }
     }
+    free(global_regular_samples);
+    free(regular_samples);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Bcast(privots, mpi_size - 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    int part_start_index[mpi_size];
-    int part_length[mpi_size];
+    int *part_start_index = (int *) malloc (sizeof(int) * mpi_size);
+    int *part_length = (int *) malloc (sizeof(int) * mpi_size);
     int data_index = 0;
     for(int i = 0; i < mpi_size - 1; i++)
     {
@@ -132,15 +135,16 @@ int main()
     part_start_index[mpi_size - 1] = data_index;
     part_length[mpi_size - 1] = local_datas_size - data_index;
 
+    free(privots);
     MPI_Barrier(MPI_COMM_WORLD);
 
     //step7: global exchange
 
-    int recv_rank_partlen[mpi_size];
+    int *recv_rank_partlen = (int *) malloc (sizeof(int) * mpi_size);
     MPI_Alltoall(part_length, 1, MPI_INT, recv_rank_partlen, 1, MPI_INT, MPI_COMM_WORLD);
 
     int rank_partlen_sum = 0;
-    int rank_part_start[mpi_size];
+    int *rank_part_start = (int *) malloc (sizeof(int) * mpi_size);
 
     for(int i = 0; i < mpi_size; i++)
     {
@@ -148,7 +152,7 @@ int main()
         rank_partlen_sum += recv_rank_partlen[i];
     }
 
-    int recv_part_data[rank_partlen_sum];
+    int *recv_part_data = (int *) malloc (sizeof(int) * rank_partlen_sum);
 
     MPI_Alltoallv(local_datas, part_length, part_start_index, MPI_INT, 
                     recv_part_data, recv_rank_partlen, rank_part_start, MPI_INT, MPI_COMM_WORLD);
@@ -159,12 +163,14 @@ int main()
     //{
     //    printf("id %d: %d\n",my_rank, recv_part_data[i]);
     //}
+    free(recv_rank_partlen);
+    free(rank_part_start);
     MPI_Barrier(MPI_COMM_WORLD);
 
     //step8
 
-    int master_partlen[mpi_size];
-    int master_data_start[mpi_size];
+    int *master_partlen = (int *) malloc (sizeof(int) * mpi_size);
+    int *master_data_start = (int *) malloc (sizeof(int) * mpi_size);
 
     MPI_Gather(&rank_partlen_sum, 1, MPI_INT, master_partlen, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -181,6 +187,9 @@ int main()
                     datas, master_partlen, master_data_start, MPI_INT, 0, MPI_COMM_WORLD);
 
     free(local_datas);
+    free(recv_part_data);
+    free(master_data_start);
+    free(master_partlen);
     if(my_rank == 0)
     {
         if(datas_check(datas))
