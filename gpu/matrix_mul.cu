@@ -122,13 +122,9 @@ int main()
 
 	matrix_init(A, size_A);
 	matrix_init(B, size_B);
-	memset(C, 0, sizeof(float) * size_C);
-
 
 	cudaMemcpy(dev_A, A, size_A * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_B, B, size_B * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_C, C, size_C * sizeof(float), cudaMemcpyHostToDevice);
-	
 
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid(WC / threads.x, HC / threads.y);
@@ -144,7 +140,7 @@ int main()
 	start = clock();
 	{
 		matrix_mul_gpu << <grid, threads >> > (dev_C, dev_A, dev_B, WA, HA, WB);
-	    cudaThreadSynchronize();
+		cudaThreadSynchronize();
 	}
 	stop = clock();
 	printf("gpu_time = %d ms\n", gpu_time = (stop - start));
@@ -167,6 +163,13 @@ int main()
 
 	//printf("C\n");
 	//matrix_print(C, HC, WC);
-
+	cudaFree(dev_A);
+	cudaFree(dev_B);
+	cudaFree(dev_C);
+	
+	free(A);
+	free(B);
+	free(C);
+	free(C_gpu);
 	return 0;
 }
