@@ -62,7 +62,7 @@ __global__ void matrix_mul_gpu(float *C, float * A, float *B, int wA, int hA, in
 
 void matrix_mul_cpu(float *C, float *A, float *B)
 {
-	
+
 	for (int i = 0; i < HC; i++)
 		for (int j = 0; j < WC; j++)
 		{

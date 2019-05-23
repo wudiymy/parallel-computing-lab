@@ -18,13 +18,20 @@ __global__ void add(int *a, int *b, int *c) {
 	}
 }
 
+void cpu_add(int *a, int *b, int *c)
+{
+	for (int i = 0; i < N; i++)
+		c[i] = a[i] + b[i];
+}
+
 int main(void) {
-	int *a, *b, *c;
+	int *a, *b, *c, *gpu_c;
 	int *dev_a, *dev_b, *dev_c;
 
 	a = (int*)malloc(N * sizeof(int));
 	b = (int*)malloc(N * sizeof(int));
 	c = (int*)malloc(N * sizeof(int));
+	gpu_c = (int*)malloc(N * sizeof(int));
 
 	cudaMalloc((void**)&dev_a, N * sizeof(int));
 	cudaMalloc((void**)&dev_b, N * sizeof(int));
@@ -40,7 +47,7 @@ int main(void) {
 		cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_b, b, N * sizeof(int),
 		cudaMemcpyHostToDevice);
-	
+	int gpu_time, cpu_time;
 	time_t begin, end;
 	begin = clock();
 	{
@@ -49,19 +56,29 @@ int main(void) {
 	}
 	end = clock();
 
-	printf("GPU time = %d ms\n", int(end - begin));
+	printf("GPU time = %d ms\n", gpu_time = int(end - begin));
 
-	cudaMemcpy(c, dev_c, N * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(gpu_c, dev_c, N * sizeof(int), cudaMemcpyDeviceToHost);
+
+	begin = clock();
+	{
+		cpu_add(a, b, c);
+	}
+	end = clock();
+
+	printf("CPU time = %d ms\n", cpu_time = int(end - begin));
 
 	bool success = true;
 	for (int i = 0; i < N; i++) {
-		if ((a[i] + b[i]) != c[i]) {
+		if (c[i] != gpu_c[i]) {
 			printf("Error:  %d + %d != %d\n", a[i], b[i], c[i]);
 			success = false;
 		}
 	}
 
-	if (success)    
+	printf("speedup = %f\n", float(cpu_time) / gpu_time);
+
+	if (success)
 		printf("Everything is ok!\n");
 
 	cudaFree(dev_a);
