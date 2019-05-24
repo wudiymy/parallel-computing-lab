@@ -4,7 +4,7 @@
 
 * 姓名：龚平
 * 学号：PB17030808
-* 日期：2019-5-6
+* 日期：2019-5-24
 
 ## 实验环境
 
@@ -164,16 +164,42 @@ void matrix_mul_cpu(float *C, float *A, float *B)
 
 ![1558623156865](assets/1558623156865.png)
 
+GPU单个thread的运算能力比CPU thread弱很多，在运算量不大的情况下，反而是CPU更快。
+
+但是随着运算量的增加，GPU高吞吐量的优势可以得到充分发挥。
+
+最终GPU相比CPU运行可以实现十倍以上的加速比。
+
 ###	题目二
 
 ![1558623251795](assets/1558623251795.png)
 
+BLOCKSIZE: `16 * 16 = 256`
+
+矩阵规模
+
+* `A: 100 * 100 * BLOCK = 256 00 00`
+* `B: 100 * 100 * BLOCK = 256 00 00`
+* `C: 100 * 100 * BLOCK = 256 00 00`
+
+由于数组规模开的足够大，所以可以充分发挥GPU优势，加速比等于17
+
 ##	总结
 
-相较与`openmp`，`MPI`提供了更为丰富的操作函数，如散播、广播、聚集、全局交换、扫描的，是一种针对分布式存储系统设计的高度成熟的并行语言；但是在共享式存储系统上还是`openmp`并行粒度更细，并行开销更小，可以得到更好的性能优化。
+本次实验在计算量不大的时候，CPU算的快，在计算量大的时候，GPU算的快。
 
+这个现象可以用Ni & Sum定律解释。
 
+由于GPU并行程度比CPU高大的多，为了达到甚至超过CPU的效率就必须增加任务量。
+
+不过随着近来，随着科学计算、机器学习等学科的发展，运算量越来越大，越来越能发挥出GPU的优势（另一方面，也是GPU高算力促进了这些学科的发展）。
+
+但GPU编程也有非常大的挑战：
+
+1. GPU编程更考研并行编程能力以及对GPU结构的了解程度
+2. GPU编程调试、debug、优化不是非常方便（一旦写的不好，效率特别低）
+3. GPU控制单元过于简单，不适合控制流非常复杂的应用。
 
 ## 	源码
 
-最好移步`github` [gpzlx1/parallel_computing_lab/mpi](https://github.com/gpzlx1/parallel_computing_lab/tree/master/mpi)
+最好移步`github` [gpzlx1/parallel_computing_lab/gpu](https://github.com/gpzlx1/parallel_computing_lab/tree/master/gpu)
